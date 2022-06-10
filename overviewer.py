@@ -34,6 +34,7 @@ import time
 import logging
 from argparse import ArgumentParser
 from collections import OrderedDict
+import pickle
 
 from overviewer_core import util
 from overviewer_core import logger
@@ -497,16 +498,24 @@ def main():
             worldcache[render['world']] = w
 
         # find or create the textures object
-        texopts = util.dict_subset(render, ["texturepath", "bgcolor", "northdirection"])
-        texopts_key = tuple(texopts.items())
-        if texopts_key not in texcache:
-            tex = textures.Textures(**texopts)
-            logging.info("Generating textures...")
-            tex.generate()
-            logging.debug("Finished generating textures.")
-            texcache[texopts_key] = tex
-        else:
-            tex = texcache[texopts_key]
+        try:
+            f = open("/Users/yichengli/Desktop/texture.obj", "rb")
+            tex = pickle.load(f)
+            logging.info("Loaded texture object from file")
+        except:
+            texopts = util.dict_subset(render, ["texturepath", "bgcolor", "northdirection"])
+            texopts_key = tuple(texopts.items())
+            if texopts_key not in texcache:
+                tex = textures.Textures(**texopts)
+                logging.info("Generating textures...")
+                tex.generate()
+                logging.debug("Finished generating textures.")
+                texcache[texopts_key] = tex
+            else:
+                tex = texcache[texopts_key]
+            f = open("/Users/yichengli/Desktop/texture.obj", "wb")
+            pickle.dump(tex, f)
+            logging.info("Dumped texture object to file")
 
         try:
             logging.debug("Asking for regionset %r." % render['dimension'][1])
